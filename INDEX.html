@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CityTrace AI — Multi-Camera ANPR Intelligence</title>
+<style>
+:root{
+  --bg:#07111f; --panel:#0c192a; --panel2:#102238; --line:#1d3854;
+  --text:#e8f0f8; --muted:#8da3b8; --cyan:#37d7ff; --green:#39e58c;
+  --amber:#ffc857; --red:#ff5f6d; --purple:#9c7cff;
+}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 80% 0%,#113252 0,#07111f 42%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+button,input,select{font:inherit}.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{background:rgba(5,14,25,.96);border-right:1px solid var(--line);padding:20px 15px;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:11px;align-items:center;padding:5px 8px 25px}.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--cyan),#5a7cff);display:grid;place-items:center;color:#00111a;font-weight:900}.brand b{font-size:17px}.brand small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;color:#a8b9ca;text-align:left;padding:12px 13px;border-radius:10px;cursor:pointer}.nav button:hover,.nav button.active{background:#10283d;color:#fff}.nav span{margin-right:10px}
+.status{position:absolute;bottom:18px;left:15px;right:15px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0a1726}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);margin-right:7px}
+main{min-width:0}.topbar{height:72px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 25px;background:rgba(7,17,31,.75);backdrop-filter:blur(12px);position:sticky;top:0;z-index:5}.topbar h1{font-size:19px;margin:0}.topbar small{color:var(--muted)}.actions{display:flex;gap:8px}.btn{background:#11253a;border:1px solid var(--line);color:#dce9f5;padding:9px 13px;border-radius:9px;cursor:pointer}.btn.primary{background:#087f9f;border-color:#22c9ef}.btn:hover{filter:brightness(1.15)}
+.content{padding:23px;max-width:1800px;margin:auto}.page{display:none}.page.active{display:block}.hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:18px}.hero h2{margin:0 0 7px;font-size:28px}.hero p{margin:0;color:var(--muted)}.live{font-size:12px;color:#b9d1e4}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:15px}.card{background:linear-gradient(145deg,#0d1d2e,#091624);border:1px solid var(--line);border-radius:13px;padding:16px;min-height:105px}.card .label{color:var(--muted);font-size:12px}.value{font-size:25px;font-weight:750;margin:9px 0 4px}.delta{font-size:11px}.up{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}
+.grid2{display:grid;grid-template-columns:1.55fr 1fr;gap:15px}.panel{background:rgba(10,24,39,.92);border:1px solid var(--line);border-radius:14px;padding:16px}.panel h3{margin:0 0 13px;font-size:15px}.sub{color:var(--muted);font-size:11px}.map{height:420px;border-radius:10px;overflow:hidden;position:relative;background:#091725;border:1px solid #17334c}
+.map svg{width:100%;height:100%}.road{stroke:#24425d;stroke-width:10;fill:none;stroke-linecap:round}.road2{stroke:#132b40;stroke-width:5;fill:none}.route{stroke:var(--cyan);stroke-width:4;fill:none;stroke-dasharray:9 8;filter:drop-shadow(0 0 5px #1fcffb)}.camera{fill:#ffca4d;stroke:#0b1724;stroke-width:3}.vehicle{fill:#37e7a0;stroke:#06111d;stroke-width:3}.maptag{position:absolute;background:#07111fdd;border:1px solid var(--line);padding:8px 10px;border-radius:9px;font-size:11px}.maptag strong{display:block}.legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:9px}.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.table{width:100%;border-collapse:collapse;font-size:12px}.table th{text-align:left;color:#8299ae;font-weight:500;padding:10px;border-bottom:1px solid var(--line)}.table td{padding:11px 10px;border-bottom:1px solid #142a3f}.plate{font-weight:800;letter-spacing:1px;color:#eaf7ff}.confidence{font-weight:700}.pill{padding:4px 7px;border-radius:20px;background:#14314a;font-size:10px}.pill.green{background:#0c3c2c;color:#66efb1}.pill.red{background:#451d28;color:#ff8791}.pill.amber{background:#493a19;color:#ffd76c}
+.barwrap{display:grid;gap:10px}.barrow{display:grid;grid-template-columns:120px 1fr 45px;align-items:center;gap:8px;font-size:11px;color:#9fb0c0}.bar{height:8px;border-radius:8px;background:#10283c;overflow:hidden}.bar b{display:block;height:100%;background:linear-gradient(90deg,#22bfe9,#7d8cff);border-radius:8px}
+.chart{height:220px;position:relative}.chart svg{width:100%;height:100%}.featuregrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.feature{padding:14px;border:1px solid var(--line);border-radius:11px;background:#0b1a2a}.feature b{display:block;margin-bottom:5px}.feature p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.search{display:flex;gap:8px;margin-bottom:14px}.search input{flex:1;background:#071523;border:1px solid var(--line);color:#fff;padding:11px;border-radius:9px}.search select{background:#071523;border:1px solid var(--line);color:#fff;padding:11px;border-radius:9px}
+.trace{display:grid;grid-template-columns:300px 1fr;gap:15px}.timeline{display:grid;gap:10px}.event{border-left:2px solid #24425d;padding:8px 0 8px 13px}.event b{font-size:12px}.event small{display:block;color:var(--muted);margin-top:3px}.confidencebar{height:5px;background:#183148;border-radius:5px;margin-top:7px}.confidencebar i{display:block;height:100%;background:var(--green);border-radius:5px}
+.chat{display:grid;grid-template-rows:1fr auto;height:490px}.messages{overflow:auto;padding-right:4px}.msg{max-width:85%;padding:10px 12px;border-radius:11px;margin:7px 0;font-size:12px;line-height:1.45}.msg.ai{background:#10263a;border:1px solid #1d405b}.msg.user{background:#0b607a;margin-left:auto}.chatinput{display:flex;gap:7px;margin-top:10px}.chatinput input{flex:1;background:#071523;border:1px solid var(--line);padding:10px;border-radius:9px;color:white}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:20}.modal.show{display:flex}.modalbox{width:min(720px,92vw);background:#0a1929;border:1px solid var(--line);border-radius:15px;padding:20px}.modalbox h3{margin-top:0}.close{float:right;border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer}
+.alert{display:flex;justify-content:space-between;gap:15px;padding:13px;border:1px solid #5a2a35;background:#26141b;border-radius:10px;margin-bottom:9px}.alert b{font-size:12px}.alert small{color:#b9a5aa}.footer-note{color:#667d91;font-size:10px;margin-top:14px}
+@media(max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}.grid2,.trace{grid-template-columns:1fr}.sidebar{width:210px}.app{grid-template-columns:210px 1fr}}
+@media(max-width:760px){.app{display:block}.sidebar{position:relative;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line)}.status{display:none}.cards{grid-template-columns:1fr 1fr}.topbar{padding:0 12px}.content{padding:12px}.hero{display:block}.actions{margin-top:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">CT</div><div><b>CityTrace AI</b><small>Urban Mobility Intelligence</small></div></div>
+  <div class="nav">
+    <button class="active" data-page="overview">◈ <span>Command Center</span></button>
+    <button data-page="trajectory">⌁ <span>Vehicle Trajectory</span></button>
+    <button data-page="analytics">▥ <span>Traffic Analytics</span></button>
+    <button data-page="anpr">▣ <span>ANPR & OCR</span></button>
+    <button data-page="alerts">⚠ <span>Alerts</span></button>
+    <button data-page="copilot">✦ <span>AI Traffic Copilot</span></button>
+    <button data-page="architecture">◇ <span>System Architecture</span></button>
+  </div>
+  <div class="status"><span class="dot"></span><b style="font-size:11px">NETWORK ONLINE</b><div style="color:#7e96aa;font-size:10px;margin-top:6px">48 cameras • 44 streaming<br>Last sync: <span id="clock">--:--:--</span></div></div>
+</aside>
 
+<main>
+<header class="topbar">
+  <div><h1 id="pageTitle">City Command Center</h1><small>Multi-camera ANPR • Trajectory • Predictive Traffic</small></div>
+  <div class="actions"><button class="btn" onclick="simulate()">▶ Simulate Event</button><button class="btn primary" onclick="openModal()">＋ Add Camera</button></div>
+</header>
+
+<div class="content">
+<section class="page active" id="overview">
+  <div class="hero"><div><h2>City-wide mobility at a glance</h2><p>Real-time observations unified into persistent vehicle identities.</p></div><div class="live">● LIVE • Bengaluru demo network</div></div>
+  <div class="cards">
+    <div class="card"><div class="label">ACTIVE CAMERAS</div><div class="value" id="camCount">48</div><div class="delta up">+3 online this hour</div></div>
+    <div class="card"><div class="label">PLATES / HOUR</div><div class="value">12,846</div><div class="delta up">+8.4% vs baseline</div></div>
+    <div class="card"><div class="label">OCR ACCURACY</div><div class="value">94.7%</div><div class="delta up">Target &gt; 90%</div></div>
+    <div class="card"><div class="label">AVG CITY SPEED</div><div class="value">31 km/h</div><div class="delta warn">−6 km/h from free flow</div></div>
+    <div class="card"><div class="label">OPEN ALERTS</div><div class="value bad" id="alertCount">7</div><div class="delta bad">2 high priority</div></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Live camera network & vehicle movement <span class="sub"> • unified GIS view</span></h3>
+      <div class="map" id="mainMap">
+        <svg viewBox="0 0 900 420">
+          <path class="road" d="M30 330 C180 270 250 315 370 250 S600 110 860 170"/>
+          <path class="road" d="M90 60 C210 100 280 130 360 220 S570 330 850 350"/>
+          <path class="road" d="M450 20 C430 120 490 180 530 230 S650 330 690 410"/>
+          <path class="road2" d="M20 200 L870 70"/><path class="road2" d="M180 410 L720 20"/>
+          <path class="route" d="M115 325 C245 292 330 260 430 215 S620 150 770 175"/>
+          <circle class="camera" cx="115" cy="325" r="7"/><circle class="camera" cx="300" cy="283" r="7"/><circle class="camera" cx="430" cy="215" r="7"/><circle class="camera" cx="610" cy="155" r="7"/><circle class="camera" cx="770" cy="175" r="7"/>
+          <circle class="vehicle" cx="300" cy="283" r="9"/><circle class="vehicle" cx="610" cy="155" r="9"/>
+        </svg>
+        <div class="maptag" style="left:4%;bottom:7%"><strong>EC-07</strong>Electronic City • 38 km/h</div>
+        <div class="maptag" style="right:5%;top:8%"><strong>ORR-22</strong>Traffic density: 82%</div>
+      </div>
+      <div class="legend"><span><i style="background:#ffca4d"></i>ANPR camera</span><span><i style="background:#37e7a0"></i>Tracked vehicle</span><span><i style="background:#37d7ff"></i>Trajectory</span></div>
+    </div>
+    <div class="panel"><h3>Live detections</h3>
+      <table class="table"><thead><tr><th>Plate</th><th>Camera</th><th>Conf.</th><th>Identity</th></tr></thead><tbody id="detectionRows"></tbody></table>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:15px">
+    <div class="panel"><h3>City traffic trend <span class="sub">last 12 hours</span></h3><div class="chart">
+      <svg viewBox="0 0 800 220" preserveAspectRatio="none"><path d="M0 180 L60 160 L120 165 L180 135 L240 120 L300 145 L360 105 L420 115 L480 75 L540 88 L600 55 L660 78 L720 48 L800 65" fill="none" stroke="#37d7ff" stroke-width="4"/><path d="M0 180 L60 160 L120 165 L180 135 L240 120 L300 145 L360 105 L420 115 L480 75 L540 88 L600 55 L660 78 L720 48 L800 65 L800 220 L0 220Z" fill="#37d7ff" opacity=".07"/></svg></div></div>
+    <div class="panel"><h3>Top congestion corridors</h3><div class="barwrap">
+      <div class="barrow"><span>Silk Board → EC</span><div class="bar"><b style="width:91%"></b></div><b>91%</b></div>
+      <div class="barrow"><span>ORR → Marathahalli</span><div class="bar"><b style="width:84%"></b></div><b>84%</b></div>
+      <div class="barrow"><span>KR Puram → Tin</span><div class="bar"><b style="width:76%"></b></div><b>76%</b></div>
+      <div class="barrow"><span>Hebbal → Yelahanka</span><div class="bar"><b style="width:63%"></b></div><b>63%</b></div>
+    </div></div>
+  </div>
+</section>
+
+<section class="page" id="trajectory">
+  <div class="hero"><div><h2>Single Plate Trajectory</h2><p>Reconstruct a vehicle's spatial-temporal journey across camera nodes.</p></div></div>
+  <div class="search"><input id="plateSearch" value="KA01AB1234" placeholder="Enter plate, e.g. KA01AB1234"><button class="btn primary" onclick="trackPlate()">Track Vehicle</button><button class="btn" onclick="fillPlate()">Try demo plate</button></div>
+  <div class="trace">
+    <div class="panel"><h3>Persistent Identity</h3><div style="font-size:25px;font-weight:800" id="trackPlate">KA01AB1234</div><div class="sub" style="margin-top:4px">Vehicle ID: VX-7F2A-91C8</div><div class="featuregrid" style="margin-top:15px"><div class="feature"><b>7 observations</b><p>Across 5 camera zones</p></div><div class="feature"><b>96.2%</b><p>Identity confidence</p></div><div class="feature"><b>White sedan</b><p>Visual class</p></div><div class="feature"><b>2h 14m</b><p>Observed window</p></div></div><h3 style="margin-top:18px">Observation timeline</h3><div class="timeline" id="timeline"></div></div>
+    <div class="panel"><h3>Reconstructed route <span class="sub">timestamp ordered</span></h3><div class="map" style="height:540px"><svg viewBox="0 0 900 540">
+      <path class="road" d="M60 410 C180 350 230 390 340 300 S550 180 820 240"/><path class="road" d="M100 80 C240 140 290 180 380 270 S580 430 820 460"/><path class="road" d="M550 30 C520 130 540 190 580 260 S690 410 700 520"/>
+      <path class="route" d="M105 400 C210 365 270 350 350 295 S500 210 620 220 S735 230 800 240"/>
+      <circle class="camera" cx="105" cy="400" r="8"/><circle class="camera" cx="350" cy="295" r="8"/><circle class="camera" cx="500" cy="215" r="8"/><circle class="camera" cx="620" cy="220" r="8"/><circle class="camera" cx="800" cy="240" r="8"/>
+      <circle class="vehicle" cx="105" cy="400" r="10"/><circle class="vehicle" cx="350" cy="295" r="10"/><circle class="vehicle" cx="500" cy="215" r="10"/><circle class="vehicle" cx="620" cy="220" r="10"/><circle class="vehicle" cx="800" cy="240" r="10"/>
+    </svg><div class="maptag" style="left:3%;bottom:6%"><strong>14:08:31</strong>EC-07 • Entry</div><div class="maptag" style="right:4%;top:35%"><strong>16:22:09</strong>ORR-22 • Latest</div></div></div>
+  </div>
+</section>
+
+<section class="page" id="analytics">
+  <div class="hero"><div><h2>Macro Traffic Analytics</h2><p>City-wide density, origin-destination patterns and predictive congestion.</p></div><button class="btn primary" onclick="toast('Forecast recalculated using historical time-of-day patterns.')">↻ Recalculate Forecast</button></div>
+  <div class="cards"><div class="card"><div class="label">NETWORK DENSITY</div><div class="value">68%</div><div class="delta warn">Moderate-high</div></div><div class="card"><div class="label">FLOW RATE</div><div class="value">4,218/hr</div><div class="delta up">+5.2%</div></div><div class="card"><div class="label">AVG JOURNEY</div><div class="value">24.6 min</div><div class="delta warn">+3.1 min</div></div><div class="card"><div class="label">BOTTLENECKS</div><div class="value">11</div><div class="delta bad">3 critical</div></div><div class="card"><div class="label">FORECAST</div><div class="value">+18%</div><div class="delta warn">next 30 min</div></div></div>
+  <div class="grid2"><div class="panel"><h3>Origin → Destination matrix</h3><table class="table"><thead><tr><th>Origin</th><th>Destination</th><th>Vehicles</th><th>Avg time</th><th>Trend</th></tr></thead><tbody><tr><td>Electronic City</td><td>Silk Board</td><td>1,284</td><td>18m</td><td class="bad">↑ 14%</td></tr><tr><td>Whitefield</td><td>Marathahalli</td><td>986</td><td>22m</td><td class="bad">↑ 9%</td></tr><tr><td>Hebbal</td><td>Yelahanka</td><td>724</td><td>17m</td><td class="up">↓ 4%</td></tr><tr><td>KR Puram</td><td>MG Road</td><td>681</td><td>26m</td><td class="warn">↑ 2%</td></tr></tbody></table></div>
+  <div class="panel"><h3>Predictive congestion</h3><div class="barwrap"><div class="barrow"><span>15:30</span><div class="bar"><b style="width:58%"></b></div><b>58%</b></div><div class="barrow"><span>16:00</span><div class="bar"><b style="width:67%"></b></div><b>67%</b></div><div class="barrow"><span>16:30</span><div class="bar"><b style="width:79%"></b></div><b>79%</b></div><div class="barrow"><span>17:00</span><div class="bar"><b style="width:88%"></b></div><b>88%</b></div><div class="barrow"><span>17:30</span><div class="bar"><b style="width:93%"></b></div><b>93%</b></div><p class="sub">Forecast combines current sensor state with historical same-day/time patterns.</p></div></div></div>
+</section>
+
+<section class="page" id="anpr">
+  <div class="hero"><div><h2>High-Precision ANPR & OCR</h2><p>Detection, OCR, source traceability and fallback visual identity.</p></div></div>
+  <div class="grid2"><div class="panel"><h3>Recognition pipeline</h3><div class="featuregrid"><div class="feature"><b>① Vehicle detection</b><p>Finds vehicles in multi-lane streams.</p></div><div class="feature"><b>② Plate localization</b><p>Perspective-aware crop and enhancement.</p></div><div class="feature"><b>③ OCR ensemble</b><p>Multi-frame voting boosts recognition confidence.</p></div><div class="feature"><b>④ Persistent identity</b><p>Links observations across cameras with evidence.</p></div><div class="feature"><b>⑤ Visual fallback</b><p>Uses non-plate vehicle descriptors when OCR fails.</p></div><div class="feature"><b>⑥ Audit trail</b><p>Every observation stores camera, time and confidence.</p></div></div></div>
+  <div class="panel"><h3>Latest recognition samples</h3><table class="table"><thead><tr><th>Plate</th><th>OCR</th><th>Visual match</th><th>Source</th></tr></thead><tbody><tr><td class="plate">KA05MN8831</td><td class="confidence up">98.7%</td><td>—</td><td>CAM-18</td></tr><tr><td class="plate">KA01AB1234</td><td class="confidence up">96.2%</td><td>99.1%</td><td>CAM-07</td></tr><tr><td class="plate">KA51XQ2209</td><td class="confidence warn">71.4%</td><td class="confidence up">94.8%</td><td>CAM-32</td></tr><tr><td class="plate">UNKNOWN</td><td class="confidence bad">31.2%</td><td class="confidence up">91.6%</td><td>CAM-41</td></tr></tbody></table><p class="footer-note">Demo note: visual descriptors are shown as a research feature. Production deployment requires privacy, legal, bias and retention controls.</p></div></div>
+</section>
+
+<section class="page" id="alerts">
+  <div class="hero"><div><h2>Real-Time Alert Center</h2><p>Rule-based and AI-assisted alerts with evidence trails.</p></div></div>
+  <div id="alertsBox"><div class="alert"><div><b>HIGH • Vehicle on watchlist</b><small>KA01AB1234 detected at ORR-22 • 16:22:09</small></div><button class="btn" onclick="toast('Evidence panel opened for KA01AB1234')">Review</button></div><div class="alert"><div><b>MEDIUM • Route anomaly</b><small>VX-83AC-120F deviated from expected corridor • confidence 88%</small></div><button class="btn" onclick="toast('Trajectory comparison opened')">Review</button></div><div class="alert"><div><b>LOW • OCR degradation</b><small>CAM-41 recognition confidence dropped below threshold.</small></div><button class="btn" onclick="toast('Camera health details opened')">Review</button></div></div>
+</section>
+
+<section class="page" id="copilot">
+  <div class="hero"><div><h2>AI Traffic Copilot</h2><p>Ask questions about vehicles, traffic patterns, alerts and routes.</p></div></div>
+  <div class="grid2"><div class="panel chat"><div class="messages" id="messages"><div class="msg ai">Hello. I am the CityTrace AI Copilot. Ask me things like <b>“Where was KA01AB1234 last seen?”</b>, <b>“What corridors are congested?”</b>, or <b>“Suggest a route from Electronic City to Whitefield.”</b></div></div><div class="chatinput"><input id="chatInput" placeholder="Ask the traffic intelligence engine..." onkeydown="if(event.key==='Enter')askAI()"><button class="btn primary" onclick="askAI()">Ask</button></div></div>
+  <div class="panel"><h3>Suggested queries</h3><div class="featuregrid"><div class="feature" onclick="askPreset('Where was KA01AB1234 last seen?')"><b>Vehicle lookup</b><p>Last observation, camera and confidence.</p></div><div class="feature" onclick="askPreset('Which corridors are congested right now?')"><b>Traffic status</b><p>Current bottlenecks and density.</p></div><div class="feature" onclick="askPreset('Suggest the best route from Electronic City to Whitefield.')"><b>Predictive route</b><p>Current + historical traffic forecast.</p></div><div class="feature" onclick="askPreset('Explain why the system linked two observations.')"><b>Explain identity</b><p>Evidence and confidence behind a match.</p></div></div></div></div>
+</section>
+
+<section class="page" id="architecture">
+  <div class="hero"><div><h2>Enterprise System Architecture</h2><p>Designed as a scalable event-driven platform.</p></div></div>
+  <div class="panel"><div class="featuregrid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="feature"><b>Camera Layer</b><p>RTSP/CCTV + ANPR feeds → edge buffering → secure ingestion.</p></div>
+    <div class="feature"><b>AI Inference Layer</b><p>YOLO-style detection → plate crop → OCR ensemble → vehicle descriptors.</p></div>
+    <div class="feature"><b>Identity Graph</b><p>Persistent vehicle IDs connect observations using plate, appearance, time and spatial constraints.</p></div>
+    <div class="feature"><b>Event Stream</b><p>Kafka-like event bus for horizontally scalable observation processing.</p></div>
+    <div class="feature"><b>Analytics Engine</b><p>Speed, density, OD matrices, bottlenecks and historical forecasting.</p></div>
+    <div class="feature"><b>GIS + API</b><p>Map tiles, trajectory API, dashboards and role-based access.</p></div>
+    <div class="feature"><b>Alert Engine</b><p>Watchlists, anomaly rules and threshold-based camera health alerts.</p></div>
+    <div class="feature"><b>Copilot</b><p>RAG/SQL agent converts natural-language questions into auditable queries.</p></div>
+    <div class="feature"><b>Governance</b><p>Encryption, RBAC, audit logs, retention policies and privacy safeguards.</p></div>
+  </div></div>
+</section>
+</div>
+</main>
+</div>
+
+<div class="modal" id="modal"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><h3>Add ANPR Camera</h3><p class="sub">Demo form — saves the camera locally for this browser session.</p><div class="featuregrid"><input id="newCam" placeholder="Camera ID" style="padding:11px;background:#071523;border:1px solid var(--line);color:#fff;border-radius:8px"><input id="newZone" placeholder="Zone / location" style="padding:11px;background:#071523;border:1px solid var(--line);color:#fff;border-radius:8px"></div><button class="btn primary" style="margin-top:14px" onclick="addCamera()">Save Camera</button></div></div>
+<div id="toast" style="position:fixed;right:20px;bottom:20px;background:#0e2b40;border:1px solid #2d5a76;padding:12px 15px;border-radius:10px;display:none;z-index:30;font-size:12px"></div>
+
+<script>
+const pages={overview:"City Command Center",trajectory:"Vehicle Trajectory",analytics:"Traffic Analytics",anpr:"ANPR & OCR",alerts:"Alert Center",copilot:"AI Traffic Copilot",architecture:"System Architecture"};
+const detections=[
+ ["KA01AB1234","ORR-22","96.2%","VX-7F2A-91C8"],["KA05MN8831","CAM-18","98.7%","VX-31C4-882A"],["KA51XQ2209","CAM-32","71.4%","VX-83AC-120F"],["UNKNOWN","CAM-41","31.2%","VX-A17E-440B"]
+];
+function renderDetections(){document.getElementById("detectionRows").innerHTML=detections.map((r,i)=>`<tr><td class="plate">${r[0]}</td><td>${r[1]}</td><td class="${parseFloat(r[2])>90?'up':parseFloat(r[2])>60?'warn':'bad'}">${r[2]}</td><td><span class="pill">${r[3]}</span></td></tr>`).join("")}
+const events=[["14:08:31","EC-07","Electronic City","96.8%"],["14:27:44","SB-12","Silk Board","95.4%"],["14:52:16","ORR-18","Hosur Road / ORR","97.1%"],["15:18:03","ORR-20","ORR Junction","93.6%"],["16:22:09","ORR-22","Marathahalli side","96.2%"]];
+function renderTimeline(){document.getElementById("timeline").innerHTML=events.map(e=>`<div class="event"><b>${e[0]} • ${e[1]}</b><small>${e[2]}</small><div class="confidencebar"><i style="width:${e[3]}"></i></div><small>identity confidence ${e[3]}</small></div>`).join("")}
+function switchPage(id){document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));document.getElementById("pageTitle").textContent=pages[id];}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>switchPage(b.dataset.page));
+function trackPlate(){let p=document.getElementById("plateSearch").value.trim().toUpperCase()||"KA01AB1234";document.getElementById("trackPlate").textContent=p;toast("Trajectory reconstructed for "+p+" using 7 observations.");}
+function fillPlate(){document.getElementById("plateSearch").value="KA01AB1234";trackPlate()}
+function askPreset(q){document.getElementById("chatInput").value=q;askAI()}
+function askAI(){const input=document.getElementById("chatInput");const q=input.value.trim();if(!q)return;const box=document.getElementById("messages");box.innerHTML+=`<div class="msg user">${q}</div>`;let a="I found 5 relevant camera observations. The answer is based on the demo event store and is traceable to camera IDs and timestamps.";if(/last seen|KA01AB1234/i.test(q))a="<b>KA01AB1234</b> was last observed at <b>ORR-22</b> at 16:22:09 with 96.2% identity confidence. Previous observation: ORR-20 at 15:18:03.";else if(/congest|traffic/i.test(q))a="Current demo congestion is highest on <b>Silk Board → Electronic City (91%)</b>, followed by ORR → Marathahalli (84%). The next 30-minute forecast shows a rise toward 88–93% during the evening peak.";else if(/route|whitefield/i.test(q))a="For a predictive route demo, the engine combines current density with historical same-day/time patterns. It would compare multiple corridors and penalize routes forecast to become congested rather than using only the current snapshot.";else if(/link|identity/i.test(q))a="The identity graph can explain a match using plate similarity, vehicle appearance descriptors, camera geometry, time gap and plausible road connectivity. Each observation keeps its source and confidence.";box.innerHTML+=`<div class="msg ai">${a}</div>`;box.scrollTop=box.scrollHeight;input.value=""}
+function simulate(){detections.unshift(["KA03TR7712","CAM-"+Math.floor(10+Math.random()*39), (90+Math.random()*9).toFixed(1)+"%","VX-"+Math.random().toString(16).slice(2,6).toUpperCase()+"-LIVE"]);detections.splice(6);renderDetections();document.getElementById("alertCount").textContent=Math.max(1,7+Math.floor(Math.random()*3));toast("Simulated live ANPR event injected into the city stream.");}
+function openModal(){document.getElementById("modal").classList.add("show")}function closeModal(){document.getElementById("modal").classList.remove("show")}
+function addCamera(){let id=document.getElementById("newCam").value||"CAM-NEW";document.getElementById("camCount").textContent=parseInt(document.getElementById("camCount").textContent)+1;closeModal();toast(id+" added to demo camera network.")}
+function toast(s){const t=document.getElementById("toast");t.textContent=s;t.style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>t.style.display="none",2800)}
+function tick(){document.getElementById("clock").textContent=new Date().toLocaleTimeString()}setInterval(tick,1000);tick();renderDetections();renderTimeline();
+</script>
+</body>
+</html>
